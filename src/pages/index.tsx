@@ -1,17 +1,17 @@
-import Link from 'next/link'
-import { Button } from '@/ui/button'
+import { useAuthenticator } from '@aws-amplify/ui-react';
 
-export default function Home() {
+function HomePage() {
+  const { user } = useAuthenticator((context) => [context.user]);
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold mb-6">Welcome to ArtistWallet</h1>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {['royalties', 'wallet', 'pitches', 'networking', 'education', 'analytics', 'legal'].map((page) => (
-          <Link href={`/${page}`} key={page}>
-            <Button className="w-full capitalize">{page}</Button>
-          </Link>
-        ))}
-      </div>
+    <div>
+      {user ? (
+        <h1>Welcome, {user.username}!</h1>
+      ) : (
+        <h1>Please sign in</h1>
+      )}
     </div>
-  )
+  );
 }
+
+export default HomePage;
