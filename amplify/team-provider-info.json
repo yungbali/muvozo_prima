@@ -1,0 +1,56 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-muvozoprima-dev-d9b83-authRole",
+      "UnauthRoleArn": "arn:aws:iam::683481185913:role/amplify-muvozoprima-dev-d9b83-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::683481185913:role/amplify-muvozoprima-dev-d9b83-authRole",
+      "Region": "us-west-2",
+      "DeploymentBucketName": "amplify-muvozoprima-dev-d9b83-deployment",
+      "UnauthRoleName": "amplify-muvozoprima-dev-d9b83-unauthRole",
+      "StackName": "amplify-muvozoprima-dev-d9b83",
+      "StackId": "arn:aws:cloudformation:us-west-2:683481185913:stack/amplify-muvozoprima-dev-d9b83/5f69b440-80df-11ef-ab2b-02f654a17df7",
+      "AmplifyAppId": "d31cqn93nqmsh9"
+    },
+    "categories": {
+      "interactions": {
+        "muvozolex": {
+          "deploymentBucketName": "amplify-muvozoprima-dev-d9b83-deployment",
+          "s3Key": "amplify-builds/muvozolex-62397772384e482b6537-build.zip"
+        }
+      },
+      "auth": {
+        "muvozoprimae1eaf27c": {}
+      },
+      "function": {
+        "S3Triggerc2e29554": {
+          "deploymentBucketName": "amplify-muvozoprima-dev-d9b83-deployment",
+          "s3Key": "amplify-builds/S3Triggerc2e29554-6e666f59773850356e4e-build.zip"
+        },
+        "pitchAnalysis": {
+          "deploymentBucketName": "amplify-muvozoprima-dev-d9b83-deployment",
+          "s3Key": "amplify-builds/pitchAnalysis-58745537524975424455-build.zip"
+        },
+        "royaltyCalculation": {
+          "deploymentBucketName": "amplify-muvozoprima-dev-d9b83-deployment",
+          "s3Key": "amplify-builds/royaltyCalculation-573952454a32534e334a-build.zip"
+        },
+        "S3Triggerdc711559": {
+          "deploymentBucketName": "amplify-muvozoprima-dev-d9b83-deployment",
+          "s3Key": "amplify-builds/S3Triggerdc711559-6a77434553786b564a52-build.zip"
+        }
+      },
+      "analytics": {
+        "muvozoprima": {}
+      },
+      "api": {
+        "muvozoprima": {}
+      },
+      "predictions": {
+        "interpretmuvozo": {}
+      },
+      "storage": {
+        "storageduo": {}
+      }
+    }
+  }
+}

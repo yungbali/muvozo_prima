@@ -1,0 +1,21 @@
+{
+    "appName": "muvozoprima",
+    "roleName": "pinpointLambdaRole41a329c0",
+    "cloudformationPolicyName": "cloudformationPolicy41a329c0",
+    "cloudWatchPolicyName": "cloudWatchPolicy41a329c0",
+    "pinpointPolicyName": "pinpointPolicy41a329c0",
+    "authPolicyName": "pinpoint_amplify_41a329c0",
+    "unauthPolicyName": "pinpoint_amplify_41a329c0",
+    "authRoleName": {
+        "Ref": "AuthRoleName"
+    },
+    "unauthRoleName": {
+        "Ref": "UnauthRoleName"
+    },
+    "authRoleArn": {
+        "Fn::GetAtt": [
+            "AuthRole",
+            "Arn"
+        ]
+    }
+}

@@ -1,0 +1,14 @@
+{
+  "resourceName": "storageduo",
+  "policyUUID": "67c1b013",
+  "bucketName": "muvozoprimdeux10",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "triggerFunction": "S3Triggerdc711559",
+  "groupAccess": {}
+}

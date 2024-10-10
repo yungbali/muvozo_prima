@@ -1,0 +1,25 @@
+{
+    "resourceName": "muvozolex",
+    "botName": "muvozoprima_bot",
+    "intents": [
+        {
+            "slots": [
+                {
+                    "name": "Lagos",
+                    "type": "AMAZON.Artist",
+                    "prompt": "Lagos",
+                    "required": false,
+                    "customType": false
+                }
+            ],
+            "utterances": [
+                "muvozolex"
+            ],
+            "intentName": "s",
+            "newSlotTypes": []
+        }
+    ],
+    "outputVoice": "Joanna",
+    "sessionTimeout": 5,
+    "coppa": true
+}

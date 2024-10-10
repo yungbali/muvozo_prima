@@ -1,0 +1,117 @@
+type Artist @model @auth(rules: [{allow: owner}]) {
+  id: ID!
+  name: String!
+  email: String!
+  bio: String
+  genres: [String]
+  socialLinks: AWSJSON
+  wallet: Wallet @hasOne
+  royalties: [Royalty] @hasMany
+  pitches: [Pitch] @hasMany
+  connections: [Connection] @hasMany
+  educationProgress: [EducationProgress] @hasMany
+  analyticsEvents: [AnalyticsEvent] @hasMany
+  legalDocuments: [LegalDocument] @hasMany
+}
+
+type Wallet @model @auth(rules: [{allow: owner}]) {
+  id: ID!
+  balance: Float!
+  currency: String!
+  artist: Artist @belongsTo
+  transactions: [Transaction] @hasMany
+}
+
+type Transaction @model @auth(rules: [{allow: owner}]) {
+  id: ID!
+  amount: Float!
+  type: TransactionType!
+  description: String
+  date: AWSDateTime!
+  wallet: Wallet @belongsTo
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  ROYALTY_PAYMENT
+}
+
+type Royalty @model @auth(rules: [{allow: owner}]) {
+  id: ID!
+  amount: Float!
+  source: String!
+  date: AWSDateTime!
+  artist: Artist @belongsTo
+}
+
+type Pitch @model @auth(rules: [{allow: owner}]) {
+  id: ID!
+  title: String!
+  description: String!
+  audioFileUrl: String
+  status: PitchStatus!
+  submissionDate: AWSDateTime!
+  artist: Artist @belongsTo
+}
+
+enum PitchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+type Connection @model @auth(rules: [{allow: owner}]) {
+  id: ID!
+  name: String!
+  role: String!
+  email: String
+  status: ConnectionStatus!
+  artist: Artist @belongsTo
+}
+
+enum ConnectionStatus {
+  PENDING
+  CONNECTED
+}
+
+type Course @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  title: String!
+  description: String!
+  content: AWSJSON
+  totalLessons: Int!
+  educationProgress: [EducationProgress] @hasMany
+}
+
+type EducationProgress @model @auth(rules: [{allow: owner}]) {
+  id: ID!
+  completedLessons: Int!
+  lastAccessedDate: AWSDateTime!
+  artist: Artist @belongsTo
+  course: Course @belongsTo
+}
+
+type AnalyticsEvent @model @auth(rules: [{allow: owner}]) {
+  id: ID!
+  eventType: String!
+  eventData: AWSJSON
+  timestamp: AWSDateTime!
+  artist: Artist @belongsTo
+}
+
+type LegalDocument @model @auth(rules: [{allow: owner}]) {
+  id: ID!
+  title: String!
+  description: String
+  fileUrl: String!
+  status: DocumentStatus!
+  uploadDate: AWSDateTime!
+  artist: Artist @belongsTo
+}
+
+enum DocumentStatus {
+  DRAFT
+  SIGNED
+  EXPIRED
+}

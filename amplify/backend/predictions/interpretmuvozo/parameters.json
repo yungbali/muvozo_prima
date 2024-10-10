@@ -1,0 +1,13 @@
+{
+    "resourceName": "interpretmuvozo",
+    "interpretPolicyName": "interpretPolicy78c0d866",
+    "authRoleName": {
+        "Ref": "AuthRoleName"
+    },
+    "unauthRoleName": {
+        "Ref": "UnauthRoleName"
+    },
+    "interpretType": "interpretText",
+    "type": "ALL",
+    "access": "auth"
+}
