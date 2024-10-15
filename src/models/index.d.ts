@@ -1,5 +1,5 @@
 import { ModelInit, MutableModel, __modelMeta__, ManagedIdentifier } from "@aws-amplify/datastore";
-// @ts-expect-error
+// @ts-expect-error - Suppressing type error due to auto-generated code
 import { LazyLoading, LazyLoadingDisabled, AsyncItem, AsyncCollection } from "@aws-amplify/datastore";
 
 export enum TransactionType {

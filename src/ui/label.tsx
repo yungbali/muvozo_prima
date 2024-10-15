@@ -1,16 +1,19 @@
-import React, { LabelHTMLAttributes } from 'react';
+import * as React from "react"
 
-interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
-  // Add any additional props here
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {}
 
-export const Label: React.FC<LabelProps> = ({ className, children, ...props }) => {
-  return (
-    <label
-      className={`block text-sm font-medium text-gray-700 ${className}`}
-      {...props}
-    >
-      {children}
-    </label>
-  );
-};
+const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <label
+        ref={ref}
+        className={className}
+        {...props}
+      />
+    )
+  }
+)
+Label.displayName = "Label"
+
+export { Label }

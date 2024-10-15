@@ -13,6 +13,9 @@ interface Theme {
   // ...
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ThemeStyleType {}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const _default: any;
 export default _default;

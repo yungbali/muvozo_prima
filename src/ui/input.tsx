@@ -1,15 +1,17 @@
 import * as React from "react"
 
-// Remove the empty interface and directly extend InputHTMLAttributes
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  // You can add additional props here if needed
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-export const Input: React.FC<InputProps> = ({ className, ...props }) => {
-  return (
-    <input
-      className={`border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
-      {...props}
-    />
-  );
-};
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <input
+        className={className}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = "Input"
