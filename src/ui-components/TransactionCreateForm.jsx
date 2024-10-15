@@ -10,14 +10,14 @@ import {
   Button,
   Flex,
   Grid,
-  TextAreaField,
+  SelectField,
   TextField,
 } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
-import { createAnalyticsEvent } from "../graphql/mutations";
+import { createTransaction } from "../graphql/mutations";
 const client = generateClient();
-export default function AnalyticsEventCreateForm(props) {
+export default function TransactionCreateForm(props) {
   const {
     clearOnSuccess = true,
     onSuccess,
@@ -29,24 +29,30 @@ export default function AnalyticsEventCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    eventType: "",
-    eventData: "",
-    timestamp: "",
+    amount: "",
+    type: "",
+    description: "",
+    date: "",
   };
-  const [eventType, setEventType] = React.useState(initialValues.eventType);
-  const [eventData, setEventData] = React.useState(initialValues.eventData);
-  const [timestamp, setTimestamp] = React.useState(initialValues.timestamp);
+  const [amount, setAmount] = React.useState(initialValues.amount);
+  const [type, setType] = React.useState(initialValues.type);
+  const [description, setDescription] = React.useState(
+    initialValues.description
+  );
+  const [date, setDate] = React.useState(initialValues.date);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setEventType(initialValues.eventType);
-    setEventData(initialValues.eventData);
-    setTimestamp(initialValues.timestamp);
+    setAmount(initialValues.amount);
+    setType(initialValues.type);
+    setDescription(initialValues.description);
+    setDate(initialValues.date);
     setErrors({});
   };
   const validations = {
-    eventType: [{ type: "Required" }],
-    eventData: [{ type: "JSON" }],
-    timestamp: [{ type: "Required" }],
+    amount: [{ type: "Required" }],
+    type: [{ type: "Required" }],
+    description: [],
+    date: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -91,9 +97,10 @@ export default function AnalyticsEventCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          eventType,
-          eventData,
-          timestamp,
+          amount,
+          type,
+          description,
+          date,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -124,7 +131,7 @@ export default function AnalyticsEventCreateForm(props) {
             }
           });
           await client.graphql({
-            query: createAnalyticsEvent.replaceAll("__typename", ""),
+            query: createTransaction.replaceAll("__typename", ""),
             variables: {
               input: {
                 ...modelFields,
@@ -144,87 +151,138 @@ export default function AnalyticsEventCreateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "AnalyticsEventCreateForm")}
+      {...getOverrideProps(overrides, "TransactionCreateForm")}
       {...rest}
     >
       <TextField
-        label="Event type"
+        label="Amount"
         isRequired={true}
         isReadOnly={false}
-        value={eventType}
+        type="number"
+        step="any"
+        value={amount}
+        onChange={(e) => {
+          let value = isNaN(parseFloat(e.target.value))
+            ? e.target.value
+            : parseFloat(e.target.value);
+          if (onChange) {
+            const modelFields = {
+              amount: value,
+              type,
+              description,
+              date,
+            };
+            const result = onChange(modelFields);
+            value = result?.amount ?? value;
+          }
+          if (errors.amount?.hasError) {
+            runValidationTasks("amount", value);
+          }
+          setAmount(value);
+        }}
+        onBlur={() => runValidationTasks("amount", amount)}
+        errorMessage={errors.amount?.errorMessage}
+        hasError={errors.amount?.hasError}
+        {...getOverrideProps(overrides, "amount")}
+      ></TextField>
+      <SelectField
+        label="Type"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={type}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              eventType: value,
-              eventData,
-              timestamp,
+              amount,
+              type: value,
+              description,
+              date,
             };
             const result = onChange(modelFields);
-            value = result?.eventType ?? value;
+            value = result?.type ?? value;
           }
-          if (errors.eventType?.hasError) {
-            runValidationTasks("eventType", value);
+          if (errors.type?.hasError) {
+            runValidationTasks("type", value);
           }
-          setEventType(value);
+          setType(value);
         }}
-        onBlur={() => runValidationTasks("eventType", eventType)}
-        errorMessage={errors.eventType?.errorMessage}
-        hasError={errors.eventType?.hasError}
-        {...getOverrideProps(overrides, "eventType")}
-      ></TextField>
-      <TextAreaField
-        label="Event data"
+        onBlur={() => runValidationTasks("type", type)}
+        errorMessage={errors.type?.errorMessage}
+        hasError={errors.type?.hasError}
+        {...getOverrideProps(overrides, "type")}
+      >
+        <option
+          children="Deposit"
+          value="DEPOSIT"
+          {...getOverrideProps(overrides, "typeoption0")}
+        ></option>
+        <option
+          children="Withdrawal"
+          value="WITHDRAWAL"
+          {...getOverrideProps(overrides, "typeoption1")}
+        ></option>
+        <option
+          children="Royalty payment"
+          value="ROYALTY_PAYMENT"
+          {...getOverrideProps(overrides, "typeoption2")}
+        ></option>
+      </SelectField>
+      <TextField
+        label="Description"
         isRequired={false}
         isReadOnly={false}
+        value={description}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              eventType,
-              eventData: value,
-              timestamp,
+              amount,
+              type,
+              description: value,
+              date,
             };
             const result = onChange(modelFields);
-            value = result?.eventData ?? value;
+            value = result?.description ?? value;
           }
-          if (errors.eventData?.hasError) {
-            runValidationTasks("eventData", value);
+          if (errors.description?.hasError) {
+            runValidationTasks("description", value);
           }
-          setEventData(value);
+          setDescription(value);
         }}
-        onBlur={() => runValidationTasks("eventData", eventData)}
-        errorMessage={errors.eventData?.errorMessage}
-        hasError={errors.eventData?.hasError}
-        {...getOverrideProps(overrides, "eventData")}
-      ></TextAreaField>
+        onBlur={() => runValidationTasks("description", description)}
+        errorMessage={errors.description?.errorMessage}
+        hasError={errors.description?.hasError}
+        {...getOverrideProps(overrides, "description")}
+      ></TextField>
       <TextField
-        label="Timestamp"
+        label="Date"
         isRequired={true}
         isReadOnly={false}
         type="datetime-local"
-        value={timestamp && convertToLocal(new Date(timestamp))}
+        value={date && convertToLocal(new Date(date))}
         onChange={(e) => {
           let value =
             e.target.value === "" ? "" : new Date(e.target.value).toISOString();
           if (onChange) {
             const modelFields = {
-              eventType,
-              eventData,
-              timestamp: value,
+              amount,
+              type,
+              description,
+              date: value,
             };
             const result = onChange(modelFields);
-            value = result?.timestamp ?? value;
+            value = result?.date ?? value;
           }
-          if (errors.timestamp?.hasError) {
-            runValidationTasks("timestamp", value);
+          if (errors.date?.hasError) {
+            runValidationTasks("date", value);
           }
-          setTimestamp(value);
+          setDate(value);
         }}
-        onBlur={() => runValidationTasks("timestamp", timestamp)}
-        errorMessage={errors.timestamp?.errorMessage}
-        hasError={errors.timestamp?.hasError}
-        {...getOverrideProps(overrides, "timestamp")}
+        onBlur={() => runValidationTasks("date", date)}
+        errorMessage={errors.date?.errorMessage}
+        hasError={errors.date?.hasError}
+        {...getOverrideProps(overrides, "date")}
       ></TextField>
       <Flex
         justifyContent="space-between"

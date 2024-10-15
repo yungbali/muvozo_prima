@@ -1,6 +1,6 @@
+import awsExports from './aws-exports';
 import { Amplify } from 'aws-amplify';
-import awsconfig from './aws-exports';
 
-Amplify.configure(awsconfig);
+Amplify.configure(awsExports);
 
 export default Amplify;

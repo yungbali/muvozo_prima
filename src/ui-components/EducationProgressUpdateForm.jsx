@@ -6,20 +6,16 @@
 
 /* eslint-disable */
 import * as React from "react";
-import {
-  Button,
-  Flex,
-  Grid,
-  TextAreaField,
-  TextField,
-} from "@aws-amplify/ui-react";
+import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
-import { createAnalyticsEvent } from "../graphql/mutations";
+import { getEducationProgress } from "../graphql/queries";
+import { updateEducationProgress } from "../graphql/mutations";
 const client = generateClient();
-export default function AnalyticsEventCreateForm(props) {
+export default function EducationProgressUpdateForm(props) {
   const {
-    clearOnSuccess = true,
+    id: idProp,
+    educationProgress: educationProgressModelProp,
     onSuccess,
     onError,
     onSubmit,
@@ -29,24 +25,45 @@ export default function AnalyticsEventCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    eventType: "",
-    eventData: "",
-    timestamp: "",
+    completedLessons: "",
+    lastAccessedDate: "",
   };
-  const [eventType, setEventType] = React.useState(initialValues.eventType);
-  const [eventData, setEventData] = React.useState(initialValues.eventData);
-  const [timestamp, setTimestamp] = React.useState(initialValues.timestamp);
+  const [completedLessons, setCompletedLessons] = React.useState(
+    initialValues.completedLessons
+  );
+  const [lastAccessedDate, setLastAccessedDate] = React.useState(
+    initialValues.lastAccessedDate
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setEventType(initialValues.eventType);
-    setEventData(initialValues.eventData);
-    setTimestamp(initialValues.timestamp);
+    const cleanValues = educationProgressRecord
+      ? { ...initialValues, ...educationProgressRecord }
+      : initialValues;
+    setCompletedLessons(cleanValues.completedLessons);
+    setLastAccessedDate(cleanValues.lastAccessedDate);
     setErrors({});
   };
+  const [educationProgressRecord, setEducationProgressRecord] = React.useState(
+    educationProgressModelProp
+  );
+  React.useEffect(() => {
+    const queryData = async () => {
+      const record = idProp
+        ? (
+            await client.graphql({
+              query: getEducationProgress.replaceAll("__typename", ""),
+              variables: { id: idProp },
+            })
+          )?.data?.getEducationProgress
+        : educationProgressModelProp;
+      setEducationProgressRecord(record);
+    };
+    queryData();
+  }, [idProp, educationProgressModelProp]);
+  React.useEffect(resetStateValues, [educationProgressRecord]);
   const validations = {
-    eventType: [{ type: "Required" }],
-    eventData: [{ type: "JSON" }],
-    timestamp: [{ type: "Required" }],
+    completedLessons: [{ type: "Required" }],
+    lastAccessedDate: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -91,9 +108,8 @@ export default function AnalyticsEventCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          eventType,
-          eventData,
-          timestamp,
+          completedLessons,
+          lastAccessedDate,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -124,18 +140,16 @@ export default function AnalyticsEventCreateForm(props) {
             }
           });
           await client.graphql({
-            query: createAnalyticsEvent.replaceAll("__typename", ""),
+            query: updateEducationProgress.replaceAll("__typename", ""),
             variables: {
               input: {
+                id: educationProgressRecord.id,
                 ...modelFields,
               },
             },
           });
           if (onSuccess) {
             onSuccess(modelFields);
-          }
-          if (clearOnSuccess) {
-            resetStateValues();
           }
         } catch (err) {
           if (onError) {
@@ -144,100 +158,78 @@ export default function AnalyticsEventCreateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "AnalyticsEventCreateForm")}
+      {...getOverrideProps(overrides, "EducationProgressUpdateForm")}
       {...rest}
     >
       <TextField
-        label="Event type"
+        label="Completed lessons"
         isRequired={true}
         isReadOnly={false}
-        value={eventType}
+        type="number"
+        step="any"
+        value={completedLessons}
         onChange={(e) => {
-          let { value } = e.target;
+          let value = isNaN(parseInt(e.target.value))
+            ? e.target.value
+            : parseInt(e.target.value);
           if (onChange) {
             const modelFields = {
-              eventType: value,
-              eventData,
-              timestamp,
+              completedLessons: value,
+              lastAccessedDate,
             };
             const result = onChange(modelFields);
-            value = result?.eventType ?? value;
+            value = result?.completedLessons ?? value;
           }
-          if (errors.eventType?.hasError) {
-            runValidationTasks("eventType", value);
+          if (errors.completedLessons?.hasError) {
+            runValidationTasks("completedLessons", value);
           }
-          setEventType(value);
+          setCompletedLessons(value);
         }}
-        onBlur={() => runValidationTasks("eventType", eventType)}
-        errorMessage={errors.eventType?.errorMessage}
-        hasError={errors.eventType?.hasError}
-        {...getOverrideProps(overrides, "eventType")}
+        onBlur={() => runValidationTasks("completedLessons", completedLessons)}
+        errorMessage={errors.completedLessons?.errorMessage}
+        hasError={errors.completedLessons?.hasError}
+        {...getOverrideProps(overrides, "completedLessons")}
       ></TextField>
-      <TextAreaField
-        label="Event data"
-        isRequired={false}
-        isReadOnly={false}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              eventType,
-              eventData: value,
-              timestamp,
-            };
-            const result = onChange(modelFields);
-            value = result?.eventData ?? value;
-          }
-          if (errors.eventData?.hasError) {
-            runValidationTasks("eventData", value);
-          }
-          setEventData(value);
-        }}
-        onBlur={() => runValidationTasks("eventData", eventData)}
-        errorMessage={errors.eventData?.errorMessage}
-        hasError={errors.eventData?.hasError}
-        {...getOverrideProps(overrides, "eventData")}
-      ></TextAreaField>
       <TextField
-        label="Timestamp"
+        label="Last accessed date"
         isRequired={true}
         isReadOnly={false}
         type="datetime-local"
-        value={timestamp && convertToLocal(new Date(timestamp))}
+        value={lastAccessedDate && convertToLocal(new Date(lastAccessedDate))}
         onChange={(e) => {
           let value =
             e.target.value === "" ? "" : new Date(e.target.value).toISOString();
           if (onChange) {
             const modelFields = {
-              eventType,
-              eventData,
-              timestamp: value,
+              completedLessons,
+              lastAccessedDate: value,
             };
             const result = onChange(modelFields);
-            value = result?.timestamp ?? value;
+            value = result?.lastAccessedDate ?? value;
           }
-          if (errors.timestamp?.hasError) {
-            runValidationTasks("timestamp", value);
+          if (errors.lastAccessedDate?.hasError) {
+            runValidationTasks("lastAccessedDate", value);
           }
-          setTimestamp(value);
+          setLastAccessedDate(value);
         }}
-        onBlur={() => runValidationTasks("timestamp", timestamp)}
-        errorMessage={errors.timestamp?.errorMessage}
-        hasError={errors.timestamp?.hasError}
-        {...getOverrideProps(overrides, "timestamp")}
+        onBlur={() => runValidationTasks("lastAccessedDate", lastAccessedDate)}
+        errorMessage={errors.lastAccessedDate?.errorMessage}
+        hasError={errors.lastAccessedDate?.hasError}
+        {...getOverrideProps(overrides, "lastAccessedDate")}
       ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}
       >
         <Button
-          children="Clear"
+          children="Reset"
           type="reset"
           onClick={(event) => {
             event.preventDefault();
             resetStateValues();
           }}
-          {...getOverrideProps(overrides, "ClearButton")}
+          isDisabled={!(idProp || educationProgressModelProp)}
+          {...getOverrideProps(overrides, "ResetButton")}
         ></Button>
         <Flex
           gap="15px"
@@ -247,7 +239,10 @@ export default function AnalyticsEventCreateForm(props) {
             children="Submit"
             type="submit"
             variation="primary"
-            isDisabled={Object.values(errors).some((e) => e?.hasError)}
+            isDisabled={
+              !(idProp || educationProgressModelProp) ||
+              Object.values(errors).some((e) => e?.hasError)
+            }
             {...getOverrideProps(overrides, "SubmitButton")}
           ></Button>
         </Flex>

@@ -10,14 +10,14 @@ import {
   Button,
   Flex,
   Grid,
-  TextAreaField,
+  SelectField,
   TextField,
 } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
-import { createAnalyticsEvent } from "../graphql/mutations";
+import { createLegalDocument } from "../graphql/mutations";
 const client = generateClient();
-export default function AnalyticsEventCreateForm(props) {
+export default function LegalDocumentCreateForm(props) {
   const {
     clearOnSuccess = true,
     onSuccess,
@@ -29,24 +29,34 @@ export default function AnalyticsEventCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    eventType: "",
-    eventData: "",
-    timestamp: "",
+    title: "",
+    description: "",
+    fileUrl: "",
+    status: "",
+    uploadDate: "",
   };
-  const [eventType, setEventType] = React.useState(initialValues.eventType);
-  const [eventData, setEventData] = React.useState(initialValues.eventData);
-  const [timestamp, setTimestamp] = React.useState(initialValues.timestamp);
+  const [title, setTitle] = React.useState(initialValues.title);
+  const [description, setDescription] = React.useState(
+    initialValues.description
+  );
+  const [fileUrl, setFileUrl] = React.useState(initialValues.fileUrl);
+  const [status, setStatus] = React.useState(initialValues.status);
+  const [uploadDate, setUploadDate] = React.useState(initialValues.uploadDate);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setEventType(initialValues.eventType);
-    setEventData(initialValues.eventData);
-    setTimestamp(initialValues.timestamp);
+    setTitle(initialValues.title);
+    setDescription(initialValues.description);
+    setFileUrl(initialValues.fileUrl);
+    setStatus(initialValues.status);
+    setUploadDate(initialValues.uploadDate);
     setErrors({});
   };
   const validations = {
-    eventType: [{ type: "Required" }],
-    eventData: [{ type: "JSON" }],
-    timestamp: [{ type: "Required" }],
+    title: [{ type: "Required" }],
+    description: [],
+    fileUrl: [{ type: "Required" }],
+    status: [{ type: "Required" }],
+    uploadDate: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -91,9 +101,11 @@ export default function AnalyticsEventCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          eventType,
-          eventData,
-          timestamp,
+          title,
+          description,
+          fileUrl,
+          status,
+          uploadDate,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -124,7 +136,7 @@ export default function AnalyticsEventCreateForm(props) {
             }
           });
           await client.graphql({
-            query: createAnalyticsEvent.replaceAll("__typename", ""),
+            query: createLegalDocument.replaceAll("__typename", ""),
             variables: {
               input: {
                 ...modelFields,
@@ -144,87 +156,166 @@ export default function AnalyticsEventCreateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "AnalyticsEventCreateForm")}
+      {...getOverrideProps(overrides, "LegalDocumentCreateForm")}
       {...rest}
     >
       <TextField
-        label="Event type"
+        label="Title"
         isRequired={true}
         isReadOnly={false}
-        value={eventType}
+        value={title}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              eventType: value,
-              eventData,
-              timestamp,
+              title: value,
+              description,
+              fileUrl,
+              status,
+              uploadDate,
             };
             const result = onChange(modelFields);
-            value = result?.eventType ?? value;
+            value = result?.title ?? value;
           }
-          if (errors.eventType?.hasError) {
-            runValidationTasks("eventType", value);
+          if (errors.title?.hasError) {
+            runValidationTasks("title", value);
           }
-          setEventType(value);
+          setTitle(value);
         }}
-        onBlur={() => runValidationTasks("eventType", eventType)}
-        errorMessage={errors.eventType?.errorMessage}
-        hasError={errors.eventType?.hasError}
-        {...getOverrideProps(overrides, "eventType")}
+        onBlur={() => runValidationTasks("title", title)}
+        errorMessage={errors.title?.errorMessage}
+        hasError={errors.title?.hasError}
+        {...getOverrideProps(overrides, "title")}
       ></TextField>
-      <TextAreaField
-        label="Event data"
+      <TextField
+        label="Description"
         isRequired={false}
         isReadOnly={false}
+        value={description}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              eventType,
-              eventData: value,
-              timestamp,
+              title,
+              description: value,
+              fileUrl,
+              status,
+              uploadDate,
             };
             const result = onChange(modelFields);
-            value = result?.eventData ?? value;
+            value = result?.description ?? value;
           }
-          if (errors.eventData?.hasError) {
-            runValidationTasks("eventData", value);
+          if (errors.description?.hasError) {
+            runValidationTasks("description", value);
           }
-          setEventData(value);
+          setDescription(value);
         }}
-        onBlur={() => runValidationTasks("eventData", eventData)}
-        errorMessage={errors.eventData?.errorMessage}
-        hasError={errors.eventData?.hasError}
-        {...getOverrideProps(overrides, "eventData")}
-      ></TextAreaField>
+        onBlur={() => runValidationTasks("description", description)}
+        errorMessage={errors.description?.errorMessage}
+        hasError={errors.description?.hasError}
+        {...getOverrideProps(overrides, "description")}
+      ></TextField>
       <TextField
-        label="Timestamp"
+        label="File url"
+        isRequired={true}
+        isReadOnly={false}
+        value={fileUrl}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              title,
+              description,
+              fileUrl: value,
+              status,
+              uploadDate,
+            };
+            const result = onChange(modelFields);
+            value = result?.fileUrl ?? value;
+          }
+          if (errors.fileUrl?.hasError) {
+            runValidationTasks("fileUrl", value);
+          }
+          setFileUrl(value);
+        }}
+        onBlur={() => runValidationTasks("fileUrl", fileUrl)}
+        errorMessage={errors.fileUrl?.errorMessage}
+        hasError={errors.fileUrl?.hasError}
+        {...getOverrideProps(overrides, "fileUrl")}
+      ></TextField>
+      <SelectField
+        label="Status"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              title,
+              description,
+              fileUrl,
+              status: value,
+              uploadDate,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
+      >
+        <option
+          children="Draft"
+          value="DRAFT"
+          {...getOverrideProps(overrides, "statusoption0")}
+        ></option>
+        <option
+          children="Signed"
+          value="SIGNED"
+          {...getOverrideProps(overrides, "statusoption1")}
+        ></option>
+        <option
+          children="Expired"
+          value="EXPIRED"
+          {...getOverrideProps(overrides, "statusoption2")}
+        ></option>
+      </SelectField>
+      <TextField
+        label="Upload date"
         isRequired={true}
         isReadOnly={false}
         type="datetime-local"
-        value={timestamp && convertToLocal(new Date(timestamp))}
+        value={uploadDate && convertToLocal(new Date(uploadDate))}
         onChange={(e) => {
           let value =
             e.target.value === "" ? "" : new Date(e.target.value).toISOString();
           if (onChange) {
             const modelFields = {
-              eventType,
-              eventData,
-              timestamp: value,
+              title,
+              description,
+              fileUrl,
+              status,
+              uploadDate: value,
             };
             const result = onChange(modelFields);
-            value = result?.timestamp ?? value;
+            value = result?.uploadDate ?? value;
           }
-          if (errors.timestamp?.hasError) {
-            runValidationTasks("timestamp", value);
+          if (errors.uploadDate?.hasError) {
+            runValidationTasks("uploadDate", value);
           }
-          setTimestamp(value);
+          setUploadDate(value);
         }}
-        onBlur={() => runValidationTasks("timestamp", timestamp)}
-        errorMessage={errors.timestamp?.errorMessage}
-        hasError={errors.timestamp?.hasError}
-        {...getOverrideProps(overrides, "timestamp")}
+        onBlur={() => runValidationTasks("uploadDate", uploadDate)}
+        errorMessage={errors.uploadDate?.errorMessage}
+        hasError={errors.uploadDate?.hasError}
+        {...getOverrideProps(overrides, "uploadDate")}
       ></TextField>
       <Flex
         justifyContent="space-between"

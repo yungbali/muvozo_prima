@@ -12,6 +12,5 @@ module.exports = {
       argsIgnorePattern: '^_',
       varsIgnorePattern: '^_',
     }],
-    // Add any other custom rules here
   },
 };

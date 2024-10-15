@@ -6,20 +6,16 @@
 
 /* eslint-disable */
 import * as React from "react";
-import {
-  Button,
-  Flex,
-  Grid,
-  TextAreaField,
-  TextField,
-} from "@aws-amplify/ui-react";
+import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
-import { createAnalyticsEvent } from "../graphql/mutations";
+import { getWallet } from "../graphql/queries";
+import { updateWallet } from "../graphql/mutations";
 const client = generateClient();
-export default function AnalyticsEventCreateForm(props) {
+export default function WalletUpdateForm(props) {
   const {
-    clearOnSuccess = true,
+    id: idProp,
+    wallet: walletModelProp,
     onSuccess,
     onError,
     onSubmit,
@@ -29,24 +25,39 @@ export default function AnalyticsEventCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    eventType: "",
-    eventData: "",
-    timestamp: "",
+    balance: "",
+    currency: "",
   };
-  const [eventType, setEventType] = React.useState(initialValues.eventType);
-  const [eventData, setEventData] = React.useState(initialValues.eventData);
-  const [timestamp, setTimestamp] = React.useState(initialValues.timestamp);
+  const [balance, setBalance] = React.useState(initialValues.balance);
+  const [currency, setCurrency] = React.useState(initialValues.currency);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setEventType(initialValues.eventType);
-    setEventData(initialValues.eventData);
-    setTimestamp(initialValues.timestamp);
+    const cleanValues = walletRecord
+      ? { ...initialValues, ...walletRecord }
+      : initialValues;
+    setBalance(cleanValues.balance);
+    setCurrency(cleanValues.currency);
     setErrors({});
   };
+  const [walletRecord, setWalletRecord] = React.useState(walletModelProp);
+  React.useEffect(() => {
+    const queryData = async () => {
+      const record = idProp
+        ? (
+            await client.graphql({
+              query: getWallet.replaceAll("__typename", ""),
+              variables: { id: idProp },
+            })
+          )?.data?.getWallet
+        : walletModelProp;
+      setWalletRecord(record);
+    };
+    queryData();
+  }, [idProp, walletModelProp]);
+  React.useEffect(resetStateValues, [walletRecord]);
   const validations = {
-    eventType: [{ type: "Required" }],
-    eventData: [{ type: "JSON" }],
-    timestamp: [{ type: "Required" }],
+    balance: [{ type: "Required" }],
+    currency: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -65,23 +76,6 @@ export default function AnalyticsEventCreateForm(props) {
     setErrors((errors) => ({ ...errors, [fieldName]: validationResponse }));
     return validationResponse;
   };
-  const convertToLocal = (date) => {
-    const df = new Intl.DateTimeFormat("default", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      calendar: "iso8601",
-      numberingSystem: "latn",
-      hourCycle: "h23",
-    });
-    const parts = df.formatToParts(date).reduce((acc, part) => {
-      acc[part.type] = part.value;
-      return acc;
-    }, {});
-    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-  };
   return (
     <Grid
       as="form"
@@ -91,9 +85,8 @@ export default function AnalyticsEventCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          eventType,
-          eventData,
-          timestamp,
+          balance,
+          currency,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -124,18 +117,16 @@ export default function AnalyticsEventCreateForm(props) {
             }
           });
           await client.graphql({
-            query: createAnalyticsEvent.replaceAll("__typename", ""),
+            query: updateWallet.replaceAll("__typename", ""),
             variables: {
               input: {
+                id: walletRecord.id,
                 ...modelFields,
               },
             },
           });
           if (onSuccess) {
             onSuccess(modelFields);
-          }
-          if (clearOnSuccess) {
-            resetStateValues();
           }
         } catch (err) {
           if (onError) {
@@ -144,100 +135,76 @@ export default function AnalyticsEventCreateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "AnalyticsEventCreateForm")}
+      {...getOverrideProps(overrides, "WalletUpdateForm")}
       {...rest}
     >
       <TextField
-        label="Event type"
+        label="Balance"
         isRequired={true}
         isReadOnly={false}
-        value={eventType}
+        type="number"
+        step="any"
+        value={balance}
         onChange={(e) => {
-          let { value } = e.target;
+          let value = isNaN(parseFloat(e.target.value))
+            ? e.target.value
+            : parseFloat(e.target.value);
           if (onChange) {
             const modelFields = {
-              eventType: value,
-              eventData,
-              timestamp,
+              balance: value,
+              currency,
             };
             const result = onChange(modelFields);
-            value = result?.eventType ?? value;
+            value = result?.balance ?? value;
           }
-          if (errors.eventType?.hasError) {
-            runValidationTasks("eventType", value);
+          if (errors.balance?.hasError) {
+            runValidationTasks("balance", value);
           }
-          setEventType(value);
+          setBalance(value);
         }}
-        onBlur={() => runValidationTasks("eventType", eventType)}
-        errorMessage={errors.eventType?.errorMessage}
-        hasError={errors.eventType?.hasError}
-        {...getOverrideProps(overrides, "eventType")}
+        onBlur={() => runValidationTasks("balance", balance)}
+        errorMessage={errors.balance?.errorMessage}
+        hasError={errors.balance?.hasError}
+        {...getOverrideProps(overrides, "balance")}
       ></TextField>
-      <TextAreaField
-        label="Event data"
-        isRequired={false}
+      <TextField
+        label="Currency"
+        isRequired={true}
         isReadOnly={false}
+        value={currency}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              eventType,
-              eventData: value,
-              timestamp,
+              balance,
+              currency: value,
             };
             const result = onChange(modelFields);
-            value = result?.eventData ?? value;
+            value = result?.currency ?? value;
           }
-          if (errors.eventData?.hasError) {
-            runValidationTasks("eventData", value);
+          if (errors.currency?.hasError) {
+            runValidationTasks("currency", value);
           }
-          setEventData(value);
+          setCurrency(value);
         }}
-        onBlur={() => runValidationTasks("eventData", eventData)}
-        errorMessage={errors.eventData?.errorMessage}
-        hasError={errors.eventData?.hasError}
-        {...getOverrideProps(overrides, "eventData")}
-      ></TextAreaField>
-      <TextField
-        label="Timestamp"
-        isRequired={true}
-        isReadOnly={false}
-        type="datetime-local"
-        value={timestamp && convertToLocal(new Date(timestamp))}
-        onChange={(e) => {
-          let value =
-            e.target.value === "" ? "" : new Date(e.target.value).toISOString();
-          if (onChange) {
-            const modelFields = {
-              eventType,
-              eventData,
-              timestamp: value,
-            };
-            const result = onChange(modelFields);
-            value = result?.timestamp ?? value;
-          }
-          if (errors.timestamp?.hasError) {
-            runValidationTasks("timestamp", value);
-          }
-          setTimestamp(value);
-        }}
-        onBlur={() => runValidationTasks("timestamp", timestamp)}
-        errorMessage={errors.timestamp?.errorMessage}
-        hasError={errors.timestamp?.hasError}
-        {...getOverrideProps(overrides, "timestamp")}
+        onBlur={() => runValidationTasks("currency", currency)}
+        errorMessage={errors.currency?.errorMessage}
+        hasError={errors.currency?.hasError}
+        {...getOverrideProps(overrides, "currency")}
       ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}
       >
         <Button
-          children="Clear"
+          children="Reset"
           type="reset"
           onClick={(event) => {
             event.preventDefault();
             resetStateValues();
           }}
-          {...getOverrideProps(overrides, "ClearButton")}
+          isDisabled={!(idProp || walletModelProp)}
+          {...getOverrideProps(overrides, "ResetButton")}
         ></Button>
         <Flex
           gap="15px"
@@ -247,7 +214,10 @@ export default function AnalyticsEventCreateForm(props) {
             children="Submit"
             type="submit"
             variation="primary"
-            isDisabled={Object.values(errors).some((e) => e?.hasError)}
+            isDisabled={
+              !(idProp || walletModelProp) ||
+              Object.values(errors).some((e) => e?.hasError)
+            }
             {...getOverrideProps(overrides, "SubmitButton")}
           ></Button>
         </Flex>

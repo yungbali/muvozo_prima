@@ -15,9 +15,9 @@ import {
 } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
-import { createAnalyticsEvent } from "../graphql/mutations";
+import { createCourse } from "../graphql/mutations";
 const client = generateClient();
-export default function AnalyticsEventCreateForm(props) {
+export default function CourseCreateForm(props) {
   const {
     clearOnSuccess = true,
     onSuccess,
@@ -29,24 +29,32 @@ export default function AnalyticsEventCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    eventType: "",
-    eventData: "",
-    timestamp: "",
+    title: "",
+    description: "",
+    content: "",
+    totalLessons: "",
   };
-  const [eventType, setEventType] = React.useState(initialValues.eventType);
-  const [eventData, setEventData] = React.useState(initialValues.eventData);
-  const [timestamp, setTimestamp] = React.useState(initialValues.timestamp);
+  const [title, setTitle] = React.useState(initialValues.title);
+  const [description, setDescription] = React.useState(
+    initialValues.description
+  );
+  const [content, setContent] = React.useState(initialValues.content);
+  const [totalLessons, setTotalLessons] = React.useState(
+    initialValues.totalLessons
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setEventType(initialValues.eventType);
-    setEventData(initialValues.eventData);
-    setTimestamp(initialValues.timestamp);
+    setTitle(initialValues.title);
+    setDescription(initialValues.description);
+    setContent(initialValues.content);
+    setTotalLessons(initialValues.totalLessons);
     setErrors({});
   };
   const validations = {
-    eventType: [{ type: "Required" }],
-    eventData: [{ type: "JSON" }],
-    timestamp: [{ type: "Required" }],
+    title: [{ type: "Required" }],
+    description: [{ type: "Required" }],
+    content: [{ type: "JSON" }],
+    totalLessons: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -65,23 +73,6 @@ export default function AnalyticsEventCreateForm(props) {
     setErrors((errors) => ({ ...errors, [fieldName]: validationResponse }));
     return validationResponse;
   };
-  const convertToLocal = (date) => {
-    const df = new Intl.DateTimeFormat("default", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      calendar: "iso8601",
-      numberingSystem: "latn",
-      hourCycle: "h23",
-    });
-    const parts = df.formatToParts(date).reduce((acc, part) => {
-      acc[part.type] = part.value;
-      return acc;
-    }, {});
-    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-  };
   return (
     <Grid
       as="form"
@@ -91,9 +82,10 @@ export default function AnalyticsEventCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          eventType,
-          eventData,
-          timestamp,
+          title,
+          description,
+          content,
+          totalLessons,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -124,7 +116,7 @@ export default function AnalyticsEventCreateForm(props) {
             }
           });
           await client.graphql({
-            query: createAnalyticsEvent.replaceAll("__typename", ""),
+            query: createCourse.replaceAll("__typename", ""),
             variables: {
               input: {
                 ...modelFields,
@@ -144,87 +136,119 @@ export default function AnalyticsEventCreateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "AnalyticsEventCreateForm")}
+      {...getOverrideProps(overrides, "CourseCreateForm")}
       {...rest}
     >
       <TextField
-        label="Event type"
+        label="Title"
         isRequired={true}
         isReadOnly={false}
-        value={eventType}
+        value={title}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              eventType: value,
-              eventData,
-              timestamp,
+              title: value,
+              description,
+              content,
+              totalLessons,
             };
             const result = onChange(modelFields);
-            value = result?.eventType ?? value;
+            value = result?.title ?? value;
           }
-          if (errors.eventType?.hasError) {
-            runValidationTasks("eventType", value);
+          if (errors.title?.hasError) {
+            runValidationTasks("title", value);
           }
-          setEventType(value);
+          setTitle(value);
         }}
-        onBlur={() => runValidationTasks("eventType", eventType)}
-        errorMessage={errors.eventType?.errorMessage}
-        hasError={errors.eventType?.hasError}
-        {...getOverrideProps(overrides, "eventType")}
+        onBlur={() => runValidationTasks("title", title)}
+        errorMessage={errors.title?.errorMessage}
+        hasError={errors.title?.hasError}
+        {...getOverrideProps(overrides, "title")}
+      ></TextField>
+      <TextField
+        label="Description"
+        isRequired={true}
+        isReadOnly={false}
+        value={description}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              title,
+              description: value,
+              content,
+              totalLessons,
+            };
+            const result = onChange(modelFields);
+            value = result?.description ?? value;
+          }
+          if (errors.description?.hasError) {
+            runValidationTasks("description", value);
+          }
+          setDescription(value);
+        }}
+        onBlur={() => runValidationTasks("description", description)}
+        errorMessage={errors.description?.errorMessage}
+        hasError={errors.description?.hasError}
+        {...getOverrideProps(overrides, "description")}
       ></TextField>
       <TextAreaField
-        label="Event data"
+        label="Content"
         isRequired={false}
         isReadOnly={false}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              eventType,
-              eventData: value,
-              timestamp,
+              title,
+              description,
+              content: value,
+              totalLessons,
             };
             const result = onChange(modelFields);
-            value = result?.eventData ?? value;
+            value = result?.content ?? value;
           }
-          if (errors.eventData?.hasError) {
-            runValidationTasks("eventData", value);
+          if (errors.content?.hasError) {
+            runValidationTasks("content", value);
           }
-          setEventData(value);
+          setContent(value);
         }}
-        onBlur={() => runValidationTasks("eventData", eventData)}
-        errorMessage={errors.eventData?.errorMessage}
-        hasError={errors.eventData?.hasError}
-        {...getOverrideProps(overrides, "eventData")}
+        onBlur={() => runValidationTasks("content", content)}
+        errorMessage={errors.content?.errorMessage}
+        hasError={errors.content?.hasError}
+        {...getOverrideProps(overrides, "content")}
       ></TextAreaField>
       <TextField
-        label="Timestamp"
+        label="Total lessons"
         isRequired={true}
         isReadOnly={false}
-        type="datetime-local"
-        value={timestamp && convertToLocal(new Date(timestamp))}
+        type="number"
+        step="any"
+        value={totalLessons}
         onChange={(e) => {
-          let value =
-            e.target.value === "" ? "" : new Date(e.target.value).toISOString();
+          let value = isNaN(parseInt(e.target.value))
+            ? e.target.value
+            : parseInt(e.target.value);
           if (onChange) {
             const modelFields = {
-              eventType,
-              eventData,
-              timestamp: value,
+              title,
+              description,
+              content,
+              totalLessons: value,
             };
             const result = onChange(modelFields);
-            value = result?.timestamp ?? value;
+            value = result?.totalLessons ?? value;
           }
-          if (errors.timestamp?.hasError) {
-            runValidationTasks("timestamp", value);
+          if (errors.totalLessons?.hasError) {
+            runValidationTasks("totalLessons", value);
           }
-          setTimestamp(value);
+          setTotalLessons(value);
         }}
-        onBlur={() => runValidationTasks("timestamp", timestamp)}
-        errorMessage={errors.timestamp?.errorMessage}
-        hasError={errors.timestamp?.hasError}
-        {...getOverrideProps(overrides, "timestamp")}
+        onBlur={() => runValidationTasks("totalLessons", totalLessons)}
+        errorMessage={errors.totalLessons?.errorMessage}
+        hasError={errors.totalLessons?.hasError}
+        {...getOverrideProps(overrides, "totalLessons")}
       ></TextField>
       <Flex
         justifyContent="space-between"

@@ -15,11 +15,13 @@ import {
 } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
-import { createAnalyticsEvent } from "../graphql/mutations";
+import { getAnalyticsEvent } from "../graphql/queries";
+import { updateAnalyticsEvent } from "../graphql/mutations";
 const client = generateClient();
-export default function AnalyticsEventCreateForm(props) {
+export default function AnalyticsEventUpdateForm(props) {
   const {
-    clearOnSuccess = true,
+    id: idProp,
+    analyticsEvent: analyticsEventModelProp,
     onSuccess,
     onError,
     onSubmit,
@@ -38,11 +40,37 @@ export default function AnalyticsEventCreateForm(props) {
   const [timestamp, setTimestamp] = React.useState(initialValues.timestamp);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setEventType(initialValues.eventType);
-    setEventData(initialValues.eventData);
-    setTimestamp(initialValues.timestamp);
+    const cleanValues = analyticsEventRecord
+      ? { ...initialValues, ...analyticsEventRecord }
+      : initialValues;
+    setEventType(cleanValues.eventType);
+    setEventData(
+      typeof cleanValues.eventData === "string" ||
+        cleanValues.eventData === null
+        ? cleanValues.eventData
+        : JSON.stringify(cleanValues.eventData)
+    );
+    setTimestamp(cleanValues.timestamp);
     setErrors({});
   };
+  const [analyticsEventRecord, setAnalyticsEventRecord] = React.useState(
+    analyticsEventModelProp
+  );
+  React.useEffect(() => {
+    const queryData = async () => {
+      const record = idProp
+        ? (
+            await client.graphql({
+              query: getAnalyticsEvent.replaceAll("__typename", ""),
+              variables: { id: idProp },
+            })
+          )?.data?.getAnalyticsEvent
+        : analyticsEventModelProp;
+      setAnalyticsEventRecord(record);
+    };
+    queryData();
+  }, [idProp, analyticsEventModelProp]);
+  React.useEffect(resetStateValues, [analyticsEventRecord]);
   const validations = {
     eventType: [{ type: "Required" }],
     eventData: [{ type: "JSON" }],
@@ -92,7 +120,7 @@ export default function AnalyticsEventCreateForm(props) {
         event.preventDefault();
         let modelFields = {
           eventType,
-          eventData,
+          eventData: eventData ?? null,
           timestamp,
         };
         const validationResponses = await Promise.all(
@@ -124,18 +152,16 @@ export default function AnalyticsEventCreateForm(props) {
             }
           });
           await client.graphql({
-            query: createAnalyticsEvent.replaceAll("__typename", ""),
+            query: updateAnalyticsEvent.replaceAll("__typename", ""),
             variables: {
               input: {
+                id: analyticsEventRecord.id,
                 ...modelFields,
               },
             },
           });
           if (onSuccess) {
             onSuccess(modelFields);
-          }
-          if (clearOnSuccess) {
-            resetStateValues();
           }
         } catch (err) {
           if (onError) {
@@ -144,7 +170,7 @@ export default function AnalyticsEventCreateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "AnalyticsEventCreateForm")}
+      {...getOverrideProps(overrides, "AnalyticsEventUpdateForm")}
       {...rest}
     >
       <TextField
@@ -177,6 +203,7 @@ export default function AnalyticsEventCreateForm(props) {
         label="Event data"
         isRequired={false}
         isReadOnly={false}
+        value={eventData}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -231,13 +258,14 @@ export default function AnalyticsEventCreateForm(props) {
         {...getOverrideProps(overrides, "CTAFlex")}
       >
         <Button
-          children="Clear"
+          children="Reset"
           type="reset"
           onClick={(event) => {
             event.preventDefault();
             resetStateValues();
           }}
-          {...getOverrideProps(overrides, "ClearButton")}
+          isDisabled={!(idProp || analyticsEventModelProp)}
+          {...getOverrideProps(overrides, "ResetButton")}
         ></Button>
         <Flex
           gap="15px"
@@ -247,7 +275,10 @@ export default function AnalyticsEventCreateForm(props) {
             children="Submit"
             type="submit"
             variation="primary"
-            isDisabled={Object.values(errors).some((e) => e?.hasError)}
+            isDisabled={
+              !(idProp || analyticsEventModelProp) ||
+              Object.values(errors).some((e) => e?.hasError)
+            }
             {...getOverrideProps(overrides, "SubmitButton")}
           ></Button>
         </Flex>
